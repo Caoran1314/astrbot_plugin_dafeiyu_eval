@@ -1,37 +1,68 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/AstrBot-%3E%3D4.24.0-blue" alt="AstrBot">
+  <img src="https://img.shields.io/badge/version-v0.1.0-green" alt="version">
+  <img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="license">
+  <img src="https://img.shields.io/badge/platform-aiocqhttp%20%7C%20webchat-purple" alt="platform">
+</p>
+
 # 大肥鱼拟人度评测
 
-只观测不干预：统计机器人回复的字数、分条、问句比例、AI 腔和延迟
+只观测不干预：量化统计机器人回复到底像不像人
 
-## 它解决什么问题
+> 当前版本：**v0.1.0** · 许可证：**[MIT](LICENSE)** · 作者：**[Caoran1314](https://github.com/Caoran1314)**
 
-「像人」不能靠感觉判断。这个插件只观测不改写，把每条出站回复拆成 6 个指标：
-平均字数、多段率、问句结尾率、AI 腔命中、markdown/冒号/破折号、响应延迟。
-给每个指标一个目标区间，`/eval` 输出对照表，一眼看出哪里还不像人。
+---
+
+## 为什么需要它
+
+"这个机器人像不像人"通常靠感觉。但感觉会骗人，指标不会。
+
+本插件**只观测，不改写任何回复**。每条出站消息被拆成 6 个指标：
+
+| 指标 | 目标区间 | 为什么 |
+|---|---|---|
+| **平均字数** | ≤ 20 字 | 真人一条消息通常 5~15 字 |
+| **多段率** | 50% ~ 100% | 真人习惯分多条发 |
+| **问句结尾** | ≤ 30% | 每句都在问 = 客服腔 |
+| **AI 腔命中** | = 0 | "作为一个 AI""有什么可以帮你的" |
+| **标点违规** | = 0 | 句号 / 冒号 / 破折号 |
+| **响应延迟** | 记录即可 | 太快反而不像人 |
+
+## 报告长这样
+
+```text
+📊 近 24 小时拟人度（37 条）
+
+  平均字数   7.2 字        ✅ 目标 ≤20
+  多段率     89%           ✅ 目标 50%~100%
+  问句结尾   5%            ✅ 目标 ≤30%
+  AI 腔      0 次          ✅ 目标 0
+  标点违规   0 次          ✅ 目标 0
+  延迟中位数 1.35 s        ℹ️ 仅供参考
+
+结论：5/5 达标，像人。
+```
 
 ## 安装
 
 ### 方式一：插件市场
 
-在 AstrBot 面板 → 插件 → 插件市场 里搜索 `dafeiyu_eval`。
+面板 → 插件 → 插件市场 → 切到「大肥鱼插件集」→ 安装。
 
 ### 方式二：手动
 
 ```bash
 cd AstrBot/data/plugins
-git clone https://github.com/Caoran1314/astrbot_plugin_dafeiyu_eval
+git clone https://github.com/Caoran1314/astrbot_plugin_dafeiyu_eval.git
 ```
 
-然后重启 AstrBot，或在面板里点「重载」。
+> 无第三方依赖，纯标准库。
 
 ## 配置
 
-装好后在 面板 → 插件 → 大肥鱼拟人度评测 → 配置 里调。
-
-| 配置项 | 默认 | 说明 |
-|---|---|---|
-| `enabled` | true | 是否记录 |
-| `retention_days` | 30 | 数据保留天数 |
-| `report_hours` | 24 | 默认统计窗口 |
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `enable` | bool | `true` | 只记录指标，不修改任何回复内容 |
 
 ## 命令
 
@@ -39,18 +70,19 @@ git clone https://github.com/Caoran1314/astrbot_plugin_dafeiyu_eval
 |---|---|
 | `/eval` | 24 小时报告 |
 | `/eval 72` | 72 小时报告 |
-| `/eval export` | 导出盲测素材（去掉来源，给人打分） |
+| `/eval export` | 导出盲测素材（去掉来源信息，拿去让人打分） |
 
-## 依赖
+## 盲测怎么用
 
-无（纯标准库）
+`/eval export` 会导出一批 `{"id": 1, "text": "..."}` 的样本，混入**真人聊天记录**，
+让你朋友猜哪边是 AI。猜不对，说明这条及格了。这比任何自动指标都可靠。
 
-## 说明
+## 数据
 
-- 只调用 AstrBot 自己的钩子，不修改框架代码
-- 所有数据都在本地，不上传任何内容
-- 适配平台：`aiocqhttp` / `webchat`
+- 数据在 `data/plugin_data/dafeiyu_eval/eval.db`
+- 默认保留 `retention_days`（30 天），超期自动清理
+- 只记录字数/结构/延迟这类统计特征，导出时不含用户身份
 
 ## License
 
-MIT
+[MIT](LICENSE)
